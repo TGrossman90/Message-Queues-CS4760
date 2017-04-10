@@ -1,14 +1,20 @@
+//Tom Grossman
+//CS4760 - Operating Systems
+//Project 3 - Message Queues
+//04/10/17
+//Copyright © 2017 Tom Grossman. All Rights Reserved.
+
 #include "project3.h"
 
 struct SharedMemory *shm;
-int send_id, recieve_id, shmid;
+int msgid_one, msgid_two, shmid;
 FILE *fp;
 
 int main(int argc, char* argv[]) {
 	signal(SIGINT, signalHandler);
 
 	char *fileName = "test.out";
-	const char *PATH = "./slave";
+	const char *PATH = "./user";
 	
 	int op, processes, totalProcesses,
 		maxWrites = 3,
@@ -78,29 +84,21 @@ int main(int argc, char* argv[]) {
 	
 	// Message passing variables
     int msgflg = IPC_CREAT | 0666;
-    struct msg_buf sendbuf, recievebuf;
+    struct msg_buf msgbuff_one, msgbuff_two;
 	
     // Sending queue
-    if ((send_id = msgget(send_key, msgflg)) < 0) {
+    if ((msgid_one = msgget(send_key, msgflg)) < 0) {
         perror("msgget");
         exit(1);
     }
     
 	// Receiving queue
-    if ((recieve_id = msgget(recieve_key, msgflg)) < 0) {
+    if ((msgid_two = msgget(recieve_key, msgflg)) < 0) {
         perror("msgget");
         exit(1);
     }
 	
-	// Start Clock
-	clock_gettime(CLOCK_MONOTONIC, &shm->timeStart);
-	clock_gettime(CLOCK_MONOTONIC, &shm->timeNow);
-	shm->timePassedSec = shm->timeNow.tv_sec - shm->timeStart.tv_sec;
-	shm->timePassedNansec = shm->timeNow.tv_nsec - shm->timeStart.tv_nsec;
-	
-	// Fork Children
 	pid_t pid, wpid, slaves[slaveProcesses];
-	
 	int index = 0,
 		processesRemaining = 100,
 		status;
@@ -112,73 +110,73 @@ int main(int argc, char* argv[]) {
 		killAll();
 		exit(EXIT_FAILURE);
 	}
-		
+
+
+	// Start Clock
+	clock_gettime(CLOCK_MONOTONIC, &shm->timeStart);
+	clock_gettime(CLOCK_MONOTONIC, &shm->timeNow);
+	shm->timePassedSec = shm->timeNow.tv_sec - shm->timeStart.tv_sec;
+	shm->timePassedNansec = shm->timeNow.tv_nsec - shm->timeStart.tv_nsec / 1E9;
+
 	while(1) {
-		//printf("Time: %i\n", shm->timePassedSec);
-		
-		//printf("Total Processes: %i\nProcesses Remaining: %i\n", totalProcesses, processesRemaining);
-		if(shm->timePassedSec > 19) {
-			fprintf(stderr, "Two seconds have passed. Terminating...\n");
-			killAll();
-			exit(EXIT_FAILURE);
-			
-		} else if((index < slaveProcesses) && (totalProcesses < 100)) {
+		if((index < slaveProcesses) && (totalProcesses < 100)) {
 			pid = fork();
 			totalProcesses++;
 			index++;
-		
-			//if(pid == -1) {
-				
-			//	fprintf(stderr, "Fork Error! Terminating...\n");
-			//	killAll();
-			//	exit(EXIT_FAILURE);
-			//} else 
-				if (pid == 0) {
-				
-				// Spawn slave process
-				char *id;
-				sprintf(id, "%i", index);
-				//printf("Total Processes: %i\n", totalProcesses);
-				
-				//printf("Creating Slave Process\n");
-				//https://linux.die.net/man/3/execl
-				//execl(PATH, argv[0], argv[1], argv[2], argv[3])
-				execl(PATH, id, fileName, (char *)NULL);
+			
+			if (pid == 0) {
+			
+			// Spawn slave process
+			char *id;
+			sprintf(id, "%i", index);
 
-				//If child program exec fails, _exit()
-				_exit(EXIT_FAILURE);
+			//printf("Creating Slave Process\n");
+			//https://linux.die.net/man/3/execl
+			//execl(PATH, argv[0], argv[1], argv[2], argv[3])
+			execl(PATH, id, fileName, (char *)NULL);
+
+			//If child program exec fails, _exit()
+			_exit(EXIT_FAILURE);
 			}
+			
 		} else {
-			if(!(msgrcv(send_id, &sendbuf, MSGSZ, 1, IPC_NOWAIT) < 0)) {
+			if(!(msgrcv(msgid_one, &msgbuff_one, MSGSZ, 1, IPC_NOWAIT) < 0)) {
 				index--;
 				//printf("Msg recieved\n");
 				
-				fprintf(fp, "Child %i is terminating at my time %i.%u because it reached %s\n", sendbuf.pid, shm->timePassedSec, shm->timePassedNansec, sendbuf.mtext);
+				//fflush(stdout);
+				fprintf(fp, "Child %i is terminating at my time %i.%u because it reached %s\n", msgbuff_one.pid, shm->timePassedSec, shm->timePassedNansec, msgbuff_one.mtext);
+				printf("Child %i is terminating at my time %i.%u because it reached %s\n", msgbuff_one.pid, shm->timePassedSec, shm->timePassedNansec, msgbuff_one.mtext);
 				
-				recievebuf.mType = sendbuf.pid;
-				sprintf(recievebuf.mtext, "You were supposed to bring balance to the force %l, not leave it in darkness!", sendbuf.pid);
+				msgbuff_two.mType = msgbuff_one.pid;
+				sprintf(msgbuff_two.mtext, "You were supposed to bring balance to the force %l, not leave it in darkness!", msgbuff_one.pid);
 				
-				if(msgsnd(recieve_id, &recievebuf, MSGSZ, IPC_NOWAIT) < 0) {
+				if(msgsnd(msgid_two, &msgbuff_two, MSGSZ, IPC_NOWAIT) < 0) {
 					perror("msgsnd");
 					printf("The reply to child did not send\n");
-					killAll();
-					exit(EXIT_FAILURE);
-				} else {
-					processesRemaining--;
-				}
+					signalHandler();
+				} //else {
+				//	processesRemaining--;
+				//}
 				
 				if(totalProcesses == 100) {
-					if(processesRemaining == 0) {
+				//	if(processesRemaining == 0) {
 						break;
-					}
+				//	}
 				}
 			}
 		}
 		
 		clock_gettime(CLOCK_MONOTONIC, &shm->timeNow);
 		shm->timePassedSec = shm->timeNow.tv_sec - shm->timeStart.tv_sec;
-		shm->timePassedNansec = shm->timeNow.tv_nsec - shm->timeStart.tv_nsec;
+		shm->timePassedNansec = shm->timeNow.tv_nsec - shm->timeStart.tv_nsec / 1E9;
 		wpid = waitpid(-1, &status, WNOHANG);
+		
+		if(shm->timePassedSec > 20) {
+			printf("Termination time reached. Ending program...\n");
+			signalHandler();
+		}
+
 	}
 	
 	// Let the children finish playing if the while loop exited normally
@@ -218,22 +216,25 @@ void printHelp() {
 	printf("-h flag prints this help message\n");
 	printf("-s [int x] will spawn x slave processes\n");
 	printf("-l [string fileName] will change the output filename to something of your choosing\n");
-	printf("-i [int x] will change how many times each slave process writes to the file\n");
 	printf("-t [int x] will change how long the program can execute before being forcefully terminated\n\n");
 }
 
 void signalHandler() {
 	//printf("Signal received... terminating master\n");
-    pid_t id = getpgrp();
+	msgctl(msgid_one, IPC_RMID, NULL);
+	msgctl(msgid_two, IPC_RMID, NULL);
 	shmdt(shm);
+	shmctl(shmid, IPC_RMID, NULL);
+    pid_t id = getpgrp();
     killpg(id, SIGINT);
+	sleep(1);
     exit(EXIT_SUCCESS);
 }
 
 void killAll() {
-	msgctl(send_id, IPC_RMID, NULL);
-	msgctl(recieve_id, IPC_RMID, NULL);
+	msgctl(msgid_one, IPC_RMID, NULL);
+	msgctl(msgid_two, IPC_RMID, NULL);
 	shmdt(shm);
+	shmctl(shmid, IPC_RMID, NULL);
 	fclose(fp);
-	signalHandler();
 }

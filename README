@@ -1,0 +1,17 @@
+Tom Grossman - TSGMC9
+CS4760 - Operating Systems
+Project 3 - Message Queues
+04/10/17
+
+Usage Commands:
+	Compile:
+		To compile: make
+		To remove: make clean
+	Execution:
+		./master <runs with terminationTime = 20, slaveProcesses = 5, maxWrites = 3, outputFile = test.out>
+		./master -h <prints help>
+		./master -l [string filename] <changes export logfile name>
+		./master -s [int x] <spawn x slave processes>
+		./master -t [int x] <change termination time limit>
+
+		KNOWN ISSUE: On line 169 of ./oss there is an IF statement. If you change the number 20 to a variable, the entire program breaks.

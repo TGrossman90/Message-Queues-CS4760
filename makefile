@@ -1,7 +1,7 @@
-all: oss slave
+all: oss user readme
 
-slave: slave.o
-	gcc -g -o slave slave.o
+user: user.o
+	gcc -g -o user user.o
 
 oss: oss.o
 	gcc -g -o oss oss.o
@@ -9,13 +9,13 @@ oss: oss.o
 oss.o: oss.c
 	gcc -g -c oss.c
 
-slave.o: slave.c 
-	gcc -g -c slave.c
+user.o: user.c 
+	gcc -g -c user.c
 	
 clean: remove
 
 remove:
-	rm *.o oss slave *.out
+	rm *.o oss user *.out
 
 clear: 
 	clear

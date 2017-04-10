@@ -1,3 +1,9 @@
+//Tom Grossman
+//CS4760 - Operating Systems
+//Project 3 - Message Queues
+//04/10/17
+//Copyright © 2017 Tom Grossman. All Rights Reserved.
+
 #ifndef PROJECT2_H
 #define PROJECT2_H
 

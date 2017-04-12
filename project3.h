@@ -1,3 +1,9 @@
+//Tom Grossman
+//CS4760 - Operating Systems
+//Project 2
+//04/08/17
+//Copyright © 2017 Tom Grossman. All Rights Reserved.
+
 #ifndef PROJECT2_H
 #define PROJECT2_H
 

@@ -9,9 +9,9 @@ Usage Commands:
 		To compile: make
 		To remove: make clean
 	Execution:
-		./master <runs with terminationTime = 20, slaveProcesses = 5, maxWrites = 3, outputFile = test.out>
-		./master -h <prints help>
-		./master -l [string filename] <changes export logfile name>
-		./master -s [int x] <spawn x slave processes>
-		./master -t [int x] <change termination time limit>
+		./oss <runs with terminationTime = 20, slaveProcesses = 5, maxWrites = 3, outputFile = test.out>
+		./oss -h <prints help>
+		./oss -l [string filename] <changes export logfile name>
+		./oss -s [int x] <spawn x slave processes>
+		./oss -t [int x] <change termination time limit>
 		

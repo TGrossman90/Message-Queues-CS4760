@@ -1,9 +1,3 @@
-//Tom Grossman
-//CS4760 - Operating Systems
-//Project 3 - Message Queues
-//04/10/17
-//Copyright © 2017 Tom Grossman. All Rights Reserved.
-
 #include "project3.h"
 
 int msgid_one, msgid_two, shmid;

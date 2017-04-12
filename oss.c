@@ -1,9 +1,3 @@
-//Tom Grossman
-//CS4760 - Operating Systems
-//Project 3 - Message Queues
-//04/10/17
-//Copyright © 2017 Tom Grossman. All Rights Reserved.
-
 #include "project3.h"
 
 struct SharedMemory *shm;
@@ -172,11 +166,10 @@ int main(int argc, char* argv[]) {
 		shm->timePassedNansec = shm->timeNow.tv_nsec - shm->timeStart.tv_nsec / 1E9;
 		wpid = waitpid(-1, &status, WNOHANG);
 		
-		if(shm->timePassedSec > 20) {
+		if(shm->timePassedSec > terminationTime) {
 			printf("Termination time reached. Ending program...\n");
 			signalHandler();
 		}
-
 	}
 	
 	// Let the children finish playing if the while loop exited normally
